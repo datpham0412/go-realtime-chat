@@ -1,7 +1,7 @@
 FROM golang:1.13-alpine3.11 AS build
 RUN apk --no-cache add clang gcc g++ make git ca-certificates
 
-WORKDIR /go/src/github.com/tinrab/graphql-realtime-chat
+WORKDIR /go/src/github.com/datpham0412/go-realtime-chat
 COPY go.mod go.sum vendor main.go ./
 COPY server server
 RUN go build -o /go/bin/app .
