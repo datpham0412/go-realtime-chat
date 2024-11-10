@@ -3,6 +3,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - 'server/**'
+      - 'Dockerfile'
+      - 'fly.toml'
+      - 'go.*'
 
 jobs:
   deploy:
@@ -18,11 +24,11 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      # Optional: Add Discord notification
-      - name: Discord notification
+      - name: Deployment Status
         if: always()
-        uses: Ilshidur/action-discord@master
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        with:
-          args: 'Deployment to Fly.io ${{ job.status }}'
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🚀 Deployment successful!"
+          else
+            echo "❌ Deployment failed"
+          fi

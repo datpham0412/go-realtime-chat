@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for your-app-name-falling-haze-5534 on 2024-11-10T18:53:51+11:00
+# fly.toml app configuration file generated for go-realtime-chat on 2024-11-10T19:04:39+11:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'your-app-name-falling-haze-5534'
+app = 'go-realtime-chat'
 primary_region = 'sin'
 
 [build]
