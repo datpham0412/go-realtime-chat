@@ -1,15 +1,8 @@
-# Make sure you're in the root directory of your project
-echo "name: Fly Deploy
+name: Fly Deploy
 on:
   push:
     branches:
       - main
-    paths:
-      - 'frontend/**'
-      - 'server/**'
-      - 'Dockerfile'
-      - 'fly.toml'
-      - 'go.*'
 
 jobs:
   deploy:
@@ -28,8 +21,8 @@ jobs:
       - name: Deployment Status
         if: always()
         run: |
-          if [ \"\${{ job.status }}\" == \"success\" ]; then
-            echo \"🚀 Deployment successful!\"
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🚀 Deployment successful!"
           else
-            echo \"❌ Deployment failed\"
-          fi" > .github/workflows/fly.yml
+            echo "❌ Deployment failed"
+          fi
