@@ -1,22 +1,16 @@
 # Stage 1: Build the frontend
 FROM node:16-alpine as frontend-build
 WORKDIR /app/frontend
-# Copy only package files first
 COPY frontend/package*.json ./
 RUN npm install
-# Then copy the rest of frontend files
-COPY frontend ./
-
-# Build the frontend
+COPY frontend/ .
 RUN npm run build
 
 # Stage 2: Build the backend
 FROM golang:1.20-alpine as backend-build
 WORKDIR /app
-# Copy only go mod files first
 COPY go.mod go.sum ./
 RUN go mod download
-# Then copy the rest of the files
 COPY . .
 RUN go build -o main .
 
@@ -36,7 +30,7 @@ RUN npm install -g serve
 # Copy backend binary
 COPY --from=backend-build /app/main /app/main
 
-# Create start script
+# Create start script (fixed version)
 RUN printf '#!/bin/sh\nredis-server --daemonize yes\nserve -s frontend/dist -l 3000 &\n./main' > /app/start.sh && \
     chmod +x /app/start.sh
 

@@ -1,7 +1,145 @@
-.git
-.gitignore
-.env
-node_modules
-vendor
-*.md
-!README.md
+# flyctl launch added from .gitignore
+**\.idea
+
+# flyctl launch added from frontend\.gitignore
+frontend\**\.DS_Store
+frontend\**\node_modules
+frontend\dist
+
+# local env files
+frontend\**\.env.local
+frontend\**\.env.*.local
+
+# Log files
+frontend\**\npm-debug.log*
+frontend\**\yarn-debug.log*
+frontend\**\yarn-error.log*
+
+# Editor directories and files
+frontend\**\.idea
+frontend\**\.vscode
+frontend\**\*.suo
+frontend\**\*.ntvs*
+frontend\**\*.njsproj
+frontend\**\*.sln
+frontend\**\*.sw*
+
+# flyctl launch added from vendor\github.com\agnivade\levenshtein\.gitignore
+vendor\github.com\agnivade\levenshtein\**\coverage.txt
+vendor\github.com\agnivade\levenshtein\**\fuzz\fuzz-fuzz.zip
+vendor\github.com\agnivade\levenshtein\**\fuzz\corpus\corpus\*
+vendor\github.com\agnivade\levenshtein\**\fuzz\corpus\suppressions\*
+vendor\github.com\agnivade\levenshtein\**\fuzz\corpus\crashes\*
+
+# flyctl launch added from vendor\github.com\go-redis\redis\.gitignore
+vendor\github.com\go-redis\redis\**\*.rdb
+vendor\github.com\go-redis\redis\**\testdata\*
+
+# flyctl launch added from vendor\github.com\gorilla\websocket\.gitignore
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+vendor\github.com\gorilla\websocket\**\*.o
+vendor\github.com\gorilla\websocket\**\*.a
+vendor\github.com\gorilla\websocket\**\*.so
+
+# Folders
+vendor\github.com\gorilla\websocket\**\_obj
+vendor\github.com\gorilla\websocket\**\_test
+
+# Architecture specific extensions/prefixes
+vendor\github.com\gorilla\websocket\**\*.[568vq]
+vendor\github.com\gorilla\websocket\**\[568vq].out
+
+vendor\github.com\gorilla\websocket\**\*.cgo1.go
+vendor\github.com\gorilla\websocket\**\*.cgo2.c
+vendor\github.com\gorilla\websocket\**\_cgo_defun.c
+vendor\github.com\gorilla\websocket\**\_cgo_gotypes.go
+vendor\github.com\gorilla\websocket\**\_cgo_export.*
+
+vendor\github.com\gorilla\websocket\**\_testmain.go
+
+vendor\github.com\gorilla\websocket\**\*.exe
+
+vendor\github.com\gorilla\websocket\**\.idea
+vendor\github.com\gorilla\websocket\**\*.iml
+
+# flyctl launch added from vendor\github.com\hashicorp\golang-lru\.gitignore
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+vendor\github.com\hashicorp\golang-lru\**\*.o
+vendor\github.com\hashicorp\golang-lru\**\*.a
+vendor\github.com\hashicorp\golang-lru\**\*.so
+
+# Folders
+vendor\github.com\hashicorp\golang-lru\**\_obj
+vendor\github.com\hashicorp\golang-lru\**\_test
+
+# Architecture specific extensions/prefixes
+vendor\github.com\hashicorp\golang-lru\**\*.[568vq]
+vendor\github.com\hashicorp\golang-lru\**\[568vq].out
+
+vendor\github.com\hashicorp\golang-lru\**\*.cgo1.go
+vendor\github.com\hashicorp\golang-lru\**\*.cgo2.c
+vendor\github.com\hashicorp\golang-lru\**\_cgo_defun.c
+vendor\github.com\hashicorp\golang-lru\**\_cgo_gotypes.go
+vendor\github.com\hashicorp\golang-lru\**\_cgo_export.*
+
+vendor\github.com\hashicorp\golang-lru\**\_testmain.go
+
+vendor\github.com\hashicorp\golang-lru\**\*.exe
+vendor\github.com\hashicorp\golang-lru\**\*.test
+
+# flyctl launch added from vendor\github.com\segmentio\ksuid\.gitignore
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+vendor\github.com\segmentio\ksuid\**\*.o
+vendor\github.com\segmentio\ksuid\**\*.a
+vendor\github.com\segmentio\ksuid\**\*.so
+
+# Folders
+vendor\github.com\segmentio\ksuid\**\_obj
+vendor\github.com\segmentio\ksuid\**\_test
+
+# Architecture specific extensions/prefixes
+vendor\github.com\segmentio\ksuid\**\*.[568vq]
+vendor\github.com\segmentio\ksuid\**\[568vq].out
+
+vendor\github.com\segmentio\ksuid\**\*.cgo1.go
+vendor\github.com\segmentio\ksuid\**\*.cgo2.c
+vendor\github.com\segmentio\ksuid\**\_cgo_defun.c
+vendor\github.com\segmentio\ksuid\**\_cgo_gotypes.go
+vendor\github.com\segmentio\ksuid\**\_cgo_export.*
+
+vendor\github.com\segmentio\ksuid\**\_testmain.go
+
+vendor\github.com\segmentio\ksuid\**\*.exe
+vendor\github.com\segmentio\ksuid\**\*.test
+vendor\github.com\segmentio\ksuid\**\*.prof
+vendor\github.com\segmentio\ksuid\ksuid
+
+# Emacs
+vendor\github.com\segmentio\ksuid\**\*~
+
+# govendor
+vendor\github.com\segmentio\ksuid\vendor\*
+
+# flyctl launch added from vendor\github.com\tinrab\retry\.gitignore
+# Binaries for programs and plugins
+vendor\github.com\tinrab\retry\**\*.exe
+vendor\github.com\tinrab\retry\**\*.dll
+vendor\github.com\tinrab\retry\**\*.so
+vendor\github.com\tinrab\retry\**\*.dylib
+
+# Test binary, build with `go test -c`
+vendor\github.com\tinrab\retry\**\*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+vendor\github.com\tinrab\retry\**\*.out
+
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+vendor\github.com\tinrab\retry\**\.glide
+
+# flyctl launch added from vendor\github.com\vektah\gqlparser\.gitignore
+vendor\github.com\vektah\gqlparser\vendor
+vendor\github.com\vektah\gqlparser\validator\imported\node_modules
+vendor\github.com\vektah\gqlparser\validator\imported\graphql-js
+
+vendor\github.com\vektah\gqlparser\**\.idea
+fly.toml
