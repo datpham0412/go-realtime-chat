@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/tinrab/graphql-realtime-chat/server"
@@ -18,7 +19,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	s, err := server.NewGraphQLServer(cfg.RedisURL)
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		redisURL = "redis://localhost:6379" // fallback for local development
+	}
+
+	s, err := server.NewGraphQLServer(redisURL)
 	if err != nil {
 		log.Fatal(err)
 	}
