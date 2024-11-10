@@ -1,18 +1,41 @@
-# Step 1: Build Stage
-FROM golang:1.13-alpine3.11 AS build
-RUN apk --no-cache add clang gcc g++ make git ca-certificates git
+# Stage 1: Build the frontend
+FROM node:16-alpine as frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ .
+RUN npm run build
 
-WORKDIR /go/src/github.com/datpham0412/go-realtime-chat
-COPY go.mod go.sum ./                   
-RUN go mod download                   
+# Stage 2: Build the backend
+FROM golang:1.20-alpine as backend-build
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build -o main .
 
-COPY . ./                              
-RUN go build -o /go/bin/app .           
+# Stage 3: Final image
+FROM alpine:latest
+WORKDIR /app
 
-# Step 2: Runtime Stage
-FROM alpine:3.11
-WORKDIR /usr/bin
-COPY --from=build /go/bin/app .         
-ENV REDIS_URL=localhost:6379
-EXPOSE 8080                             
-CMD ["./app"]                           
+# Install Redis and Node.js
+RUN apk add --no-cache redis nodejs npm
+
+# Copy frontend build
+COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
+
+# Install serve globally
+RUN npm install -g serve
+
+# Copy backend binary
+COPY --from=backend-build /app/main /app/main
+
+# Create start script (fixed version)
+RUN printf '#!/bin/sh\nredis-server --daemonize yes\nserve -s frontend/dist -l 3000 &\n./main' > /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Expose ports
+EXPOSE 3000 8080 6379
+
+# Start all services
+CMD ["/app/start.sh"]
