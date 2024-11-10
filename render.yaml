@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: frontend
+    env: docker
+    buildCommand: cd frontend && docker build -t frontend .
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    envVars:
+      - key: NODE_ENV
+        value: production
+    
+  - type: web
+    name: backend
+    env: docker
+    buildCommand: docker build -t backend .
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: redis-cache
+          property: connectionString
+
+  - type: redis
+    name: redis-cache
+    ipAllowList: []
+    plan: free 
