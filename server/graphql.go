@@ -15,7 +15,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 	"github.com/segmentio/ksuid"
-	"github.com/tinrab/retry"
 )
 
 type contextKey string
@@ -32,24 +31,70 @@ type graphQLServer struct {
 }
 
 func NewGraphQLServer(redisURL string) (*graphQLServer, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr: redisURL,
-	})
+	log.Printf("Initializing GraphQL server with Redis URL: %s", redisURL)
 
-	retry.ForeverSleep(2*time.Second, func(_ int) error {
+	opts, err := redis.ParseURL(redisURL)
+	if err != nil {
+		log.Printf("Failed to parse Redis URL: %v", err)
+		return nil, err
+	}
+
+	client := redis.NewClient(opts)
+
+	// Test Redis connection with retries
+	connected := false
+	maxRetries := 5
+	retryCount := 0
+
+	for !connected && retryCount < maxRetries {
 		_, err := client.Ping().Result()
-		return err
-	})
-	return &graphQLServer{
+		if err != nil {
+			log.Printf("Redis connection attempt %d failed: %v", retryCount+1, err)
+			retryCount++
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		connected = true
+		log.Printf("Successfully connected to Redis")
+		break
+	}
+
+	if !connected {
+		return nil, fmt.Errorf("failed to connect to Redis after %d attempts", maxRetries)
+	}
+
+	server := &graphQLServer{
 		redisClient:     client,
 		messageChannels: map[string]chan *Message{},
 		userChannels:    map[string]chan string{},
 		mutex:           sync.Mutex{},
-	}, nil
+	}
+
+	log.Printf("GraphQL server initialized successfully")
+	return server, nil
 }
 
 func (s *graphQLServer) Serve(route string, port int) error {
 	mux := http.NewServeMux()
+
+	// Serve static files (frontend)
+	fs := http.FileServer(http.Dir("static"))
+	mux.Handle("/", fs)
+
+	// Health check endpoint
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		// Check Redis connection
+		_, err := s.redisClient.Ping().Result()
+		if err != nil {
+			log.Printf("Health check failed: Redis error: %v", err)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "OK")
+	})
+
+	// GraphQL endpoint
 	mux.Handle(
 		route,
 		handler.GraphQL(NewExecutableSchema(Config{Resolvers: s}),
@@ -57,13 +102,39 @@ func (s *graphQLServer) Serve(route string, port int) error {
 				CheckOrigin: func(r *http.Request) bool {
 					return true
 				},
+				HandshakeTimeout: 20 * time.Second,
+				ReadBufferSize:  1024,
+				WriteBufferSize: 1024,
 			}),
+			handler.WebsocketKeepAliveDuration(20*time.Second),
 		),
 	)
 	mux.Handle("/playground", handler.Playground("GraphQL", route))
 
-	handler := cors.AllowAll().Handler(mux)
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), handler)
+	// Setup CORS
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}).Handler(mux)
+
+	// Create server with specific configuration
+	server := &http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", port),
+		Handler: corsHandler,
+	}
+
+	// Log server start
+	log.Printf("Server starting on http://0.0.0.0:%d", port)
+
+	// Start server
+	if err := server.ListenAndServe(); err != nil {
+		log.Printf("Server error: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *graphQLServer) PostMessage(ctx context.Context, user string, text string) (*Message, error) {

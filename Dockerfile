@@ -18,24 +18,17 @@ RUN go build -o main .
 FROM alpine:latest
 WORKDIR /app
 
-# Install Redis and Node.js
-RUN apk add --no-cache redis nodejs npm
+# Install Node.js
+RUN apk add --no-cache nodejs npm
 
 # Copy frontend build
-COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
-
-# Install serve globally
-RUN npm install -g serve
+COPY --from=frontend-build /app/frontend/dist /app/static
 
 # Copy backend binary
 COPY --from=backend-build /app/main /app/main
 
-# Create start script (fixed version)
-RUN printf '#!/bin/sh\nredis-server --daemonize yes\nserve -s frontend/dist -l 3000 &\n./main' > /app/start.sh && \
-    chmod +x /app/start.sh
-
 # Expose ports
-EXPOSE 3000 8080 6379
+EXPOSE 8080
 
-# Start all services
-CMD ["/app/start.sh"]
+# Start the application
+CMD ["./main"]

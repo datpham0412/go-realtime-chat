@@ -15,14 +15,31 @@ import { AuthPlugin } from './auth';
 Vue.config.productionTip = false;
 
 const httpLink = new HttpLink({
-  uri: 'http://localhost:8080/graphql',
+  uri: process.env.NODE_ENV === 'production' ? '/graphql' : 'http://localhost:8080/graphql',
 });
+
+// Improved WebSocket configuration
 const wsLink = new WebSocketLink({
-  uri: 'ws://localhost:8080/graphql',
+  uri: process.env.NODE_ENV === 'production' ? `wss://${window.location.host}/graphql` : 'ws://localhost:8080/graphql',
   options: {
     reconnect: true,
+    reconnectionAttempts: 5,
+    timeout: 30000,
+    connectionParams: {
+      // Add any auth tokens if needed
+    },
+    connectionCallback: (error) => {
+      if (error) {
+        console.error('WebSocket connection error:', error);
+      } else {
+        console.log('WebSocket connected successfully');
+      }
+    },
+    inactivityTimeout: 30000,
+    lazy: false, // Connect immediately instead of waiting for first subscription
   },
 });
+
 const link = split(
   ({ query }) => {
     const { kind, operation } = getMainDefinition(query);
@@ -31,12 +48,35 @@ const link = split(
   wsLink,
   httpLink,
 );
+
 const apolloClient = new ApolloClient({
   link: link,
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    addTypename: true,
+    typePolicies: {
+      Query: {
+        fields: {
+          messages: {
+            merge(existing = [], incoming) {
+              return [...incoming];
+            },
+          },
+        },
+      },
+    },
+  }),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'cache-and-network',
+    },
+  },
 });
+
 const apolloProvider = new VueApollo({
   defaultClient: apolloClient,
+  errorHandler(error) {
+    console.error('Apollo error:', error);
+  },
 });
 
 Vue.use(VueApollo);
