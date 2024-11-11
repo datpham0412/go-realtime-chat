@@ -15,8 +15,6 @@ services:
     image: redis:5.0.7
     ports:
       - 6379:6379
-    profiles:
-      - dev
 
   frontend:
     build:
