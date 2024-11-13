@@ -29,6 +29,7 @@ export default {
     onPostClick() {
       const messageInput = this.messageInput;
       const user = this.$currentUser();
+      console.log('Posting message:', { user, messageInput });
 
       this.$apollo
         .mutate({
@@ -36,6 +37,9 @@ export default {
             mutation($user: String!, $text: String!) {
               postMessage(user: $user, text: $text) {
                 id
+                user
+                text
+                createdAt
               }
             }
           `,
@@ -44,11 +48,12 @@ export default {
             text: messageInput,
           },
         })
-        .then((_) => {
+        .then((response) => {
+          console.log('Message posted successfully:', response);
           this.messageInput = '';
         })
         .catch((e) => {
-          console.error(e);
+          console.error('Error posting message:', e);
         });
     },
   },
