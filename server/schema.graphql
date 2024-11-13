@@ -1,19 +1,20 @@
 scalar Time
 
 type Message {
-  id: String!
+  id: ID!
   user: String!
-  createdAt: Time!
   text: String!
-}
-
-type Mutation {
-  postMessage(user: String!, text: String!): Message
+  createdAt: Time!
 }
 
 type Query {
   messages: [Message!]!
   users: [String!]!
+  hello: String!
+}
+
+type Mutation {
+  postMessage(user: String!, text: String!): Message!
 }
 
 type Subscription {
