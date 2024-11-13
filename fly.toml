@@ -9,8 +9,14 @@ primary_region = 'sin'
 [build]
   dockerfile = 'Dockerfile'
 
+[build.args]
+  NODE_VERSION = "18"
+  GO_VERSION = "1.22"
+
 [env]
   NODE_ENV = 'production'
+  GITHUB_CLIENT_ID = "${GITHUB_CLIENT_ID}"
+  GITHUB_CLIENT_SECRET = "${GITHUB_CLIENT_SECRET}"
 
 [http_service]
   internal_port = 8080

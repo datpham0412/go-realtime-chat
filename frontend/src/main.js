@@ -8,7 +8,7 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import 'bootstrap/scss/bootstrap.scss';
 
-import router from './router';
+import router from './router-guard';
 import App from './App.vue';
 import { AuthPlugin } from './auth';
 
@@ -21,7 +21,7 @@ const config = {
     wsUri: 'ws://localhost:8080/graphql',
   },
   production: {
-    httpUri: '/graphql',
+    httpUri: `${window.location.protocol}//${window.location.host}/graphql`,
     wsUri: `wss://${window.location.host}/graphql`,
   },
 };
