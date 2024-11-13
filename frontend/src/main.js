@@ -33,6 +33,7 @@ const currentConfig = config[env];
 // HTTP connection
 const httpLink = new HttpLink({
   uri: currentConfig.httpUri,
+  credentials: 'include'
 });
 
 // WebSocket connection
@@ -40,16 +41,25 @@ const wsLink = new WebSocketLink({
   uri: currentConfig.wsUri,
   options: {
     reconnect: true,
+    connectionParams: () => {
+      console.log('Setting up WebSocket connection params');
+      return {};
+    },
     timeout: 30000,
-    connectionParams: {},
+    reconnectionAttempts: 5,
+    lazy: false,
+    inactivityTimeout: 30000,
+    onError: (error) => {
+      console.error('WebSocket error:', error);
+    },
     connectionCallback: (error) => {
       if (error) {
         console.error('WebSocket connection error:', error);
       } else {
-        console.log(`WebSocket connected to ${currentConfig.wsUri}`);
+        console.log('WebSocket connected successfully');
       }
-    },
-  },
+    }
+  }
 });
 
 // Log environment and connection details
@@ -59,21 +69,25 @@ console.log(`WebSocket endpoint: ${currentConfig.wsUri}`);
 
 const link = split(
   ({ query }) => {
-    const { kind, operation } = getMainDefinition(query);
-    return kind === 'OperationDefinition' && operation === 'subscription';
+    try {
+      const definition = getMainDefinition(query);
+      const isSubscription = 
+        definition.kind === 'OperationDefinition' &&
+        definition.operation === 'subscription';
+      console.log('Operation type:', definition.operation, 'Using WebSocket:', isSubscription);
+      return isSubscription;
+    } catch (error) {
+      console.error('Error in split:', error);
+      return false;
+    }
   },
   wsLink,
-  httpLink,
+  httpLink
 );
 
 const apolloClient = new ApolloClient({
-  link: link,
-  cache: new InMemoryCache(),
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: 'cache-and-network',
-    },
-  },
+  link,
+  cache: new InMemoryCache()
 });
 
 const apolloProvider = new VueApollo({
