@@ -1,0 +1,28 @@
+schema:
+  - server/schema.graphql
+
+exec:
+  filename: server/generated.go
+  package: server
+
+model:
+  filename: server/models_gen.go
+  package: server
+
+resolver:
+  filename: server/resolver.go
+  package: server
+  type: Resolver
+
+models:
+  Message:
+    model: github.com/tinrab/graphql-realtime-chat/server.Message
+  Time:
+    model: github.com/tinrab/graphql-realtime-chat/server.Time
+
+# Add custom scalar configuration
+omit_slice_element_pointers: false
+skip_validation: true
+skip_mod_tidy: true
+
+autobind: []
