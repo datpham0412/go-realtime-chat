@@ -17,6 +17,7 @@ primary_region = 'sin'
   NODE_ENV = 'production'
   GITHUB_CLIENT_ID = "${GITHUB_CLIENT_ID}"
   GITHUB_CLIENT_SECRET = "${GITHUB_CLIENT_SECRET}"
+  GRAPHQL_ENDPOINT = "/graphql"
 
 [http_service]
   internal_port = 8080
