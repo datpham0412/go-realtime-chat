@@ -14,10 +14,11 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-redis/redis/v8"
+	githubapi "github.com/google/go-github/v32/github"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
+	githubauth "golang.org/x/oauth2/github"
 )
 
 type WebsocketInitFunc func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error)
@@ -58,11 +59,28 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("/auth/github", func(w http.ResponseWriter, r *http.Request) {
 		// Get the environment-specific callback URL
 		var callbackURL string
-		if os.Getenv("NODE_ENV") == "production" {
-			callbackURL = "https://go-realtime-chat.fly.dev/auth/github/callback"
+		var baseURL string
+
+		// Get the origin from the request header
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			baseURL = origin
 		} else {
-			callbackURL = "http://localhost:8080/auth/github/callback"
+			// Fallback to host-based URL construction
+			if r.TLS != nil || os.Getenv("NODE_ENV") == "production" {
+				baseURL = "https://" + r.Host
+			} else {
+				baseURL = "http://" + r.Host
+			}
 		}
+
+		// For development, always use the backend URL
+		if os.Getenv("NODE_ENV") != "production" {
+			baseURL = "http://localhost:8080"
+		}
+
+		callbackURL = baseURL + "/auth/github/callback"
+		fmt.Printf("Using callback URL: %s\n", callbackURL)
 
 		// Create the OAuth config
 		oauthConfig := &oauth2.Config{
@@ -73,7 +91,7 @@ func (s *Server) setupRoutes() {
 				"user:email",
 				"read:user",
 			},
-			Endpoint: github.Endpoint,
+			Endpoint: githubauth.Endpoint,
 		}
 
 		// Generate the authorization URL
@@ -89,11 +107,16 @@ func (s *Server) setupRoutes() {
 		}
 
 		var callbackURL string
-		if os.Getenv("NODE_ENV") == "production" {
-			callbackURL = "https://go-realtime-chat.fly.dev/auth/github/callback"
+		var baseURL string
+
+		// Determine the base URL from the request
+		if r.TLS != nil || os.Getenv("NODE_ENV") == "production" {
+			baseURL = "https://" + r.Host
 		} else {
-			callbackURL = "http://localhost:8080/auth/github/callback"
+			baseURL = "http://localhost:8080"
 		}
+
+		callbackURL = baseURL + "/auth/github/callback"
 
 		oauthConfig := &oauth2.Config{
 			ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
@@ -103,7 +126,7 @@ func (s *Server) setupRoutes() {
 				"user:email",
 				"read:user",
 			},
-			Endpoint: github.Endpoint,
+			Endpoint: githubauth.Endpoint,
 		}
 
 		token, err := oauthConfig.Exchange(r.Context(), code)
@@ -112,22 +135,60 @@ func (s *Server) setupRoutes() {
 			return
 		}
 
-		// Set the user cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "user_id",
-			Value:    token.AccessToken,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   os.Getenv("NODE_ENV") == "production",
-			SameSite: http.SameSiteLaxMode,
-		})
-
-		// Redirect to the frontend
-		if os.Getenv("NODE_ENV") == "production" {
-			http.Redirect(w, r, "https://go-realtime-chat.fly.dev", http.StatusTemporaryRedirect)
-		} else {
-			http.Redirect(w, r, "http://localhost:3000", http.StatusTemporaryRedirect)
+		// Get user info from GitHub
+		client := githubapi.NewClient(oauthConfig.Client(r.Context(), token))
+		user, _, err := client.Users.Get(r.Context(), "")
+		if err != nil {
+			http.Error(w, "Failed to get user info", http.StatusInternalServerError)
+			return
 		}
+
+		// Set the user cookie with the GitHub username
+		cookie := &http.Cookie{
+			Name:     "user_id",
+			Value:    *user.Login,
+			Path:     "/",
+			HttpOnly: false,
+			Secure:   r.TLS != nil || os.Getenv("NODE_ENV") == "production",
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   86400,
+			Domain:   r.Host,
+		}
+		http.SetCookie(w, cookie)
+
+		// Log cookie setting
+		fmt.Printf("Setting cookie: %+v\n", cookie)
+
+		// Determine redirect URL
+		redirectURL := "/"
+		if os.Getenv("NODE_ENV") == "production" {
+			redirectURL = "https://" + r.Host
+		} else {
+			redirectURL = "http://localhost:3000"
+		}
+
+		// Add a small delay to ensure cookie is set
+		time.Sleep(100 * time.Millisecond)
+
+		// Redirect with JavaScript to ensure cookie is properly set
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `
+			<html>
+			<body>
+				<script>
+					document.cookie = "user_id=%s;path=/;max-age=86400;%s";
+					window.location.href = "%s";
+				</script>
+			</body>
+			</html>
+		`, *user.Login,
+			func() string {
+				if r.TLS != nil || os.Getenv("NODE_ENV") == "production" {
+					return "secure;samesite=lax"
+				}
+				return "samesite=lax"
+			}(),
+			redirectURL)
 	})
 
 	resolver := &Resolver{redis: s.redis}

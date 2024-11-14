@@ -88,14 +88,26 @@ type subscriptionResolver struct{ *Resolver }
 func (r *queryResolver) Messages(ctx context.Context) ([]*Message, error) {
 	messages := []*Message{}
 
+	// Clear any wrong type data (temporary fix)
+	r.redis.Del(ctx, "messages")
+
+	// Get message IDs from sorted set
 	messageIDs, err := r.redis.ZRange(ctx, "messages", 0, -1).Result()
 	if err != nil {
-		return nil, err
+		if err != redis.Nil {
+			return nil, err
+		}
+		// Return empty array if no messages
+		return messages, nil
 	}
 
+	// Get each message
 	for _, id := range messageIDs {
 		messageJSON, err := r.redis.Get(ctx, "message:"+id).Result()
 		if err != nil {
+			if err != redis.Nil {
+				continue
+			}
 			continue
 		}
 

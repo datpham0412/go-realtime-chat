@@ -21,7 +21,12 @@ export default {
   },
   methods: {
     login() {
-      window.location.href = 'http://localhost:8080/auth/github'
+      // Get base URL based on environment
+      const baseURL = process.env.NODE_ENV === 'production'
+        ? `${window.location.protocol}//${window.location.host}`
+        : 'http://localhost:8080';
+        
+      window.location.href = `${baseURL}/auth/github`;
     }
   },
   mounted() {
