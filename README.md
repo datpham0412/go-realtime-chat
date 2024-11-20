@@ -114,9 +114,6 @@ fly secrets set GITHUB_CLIENT_ID=your_client_id
 fly secrets set GITHUB_CLIENT_SECRET=your_client_secret
 ```
 
-## 📷 Screenshots
-
-[Add your application screenshots here]
 
 ## 📜 License
 
